@@ -1,0 +1,25 @@
+{
+  "name": "react-ts",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@egjs/react-infinitegrid": "^4.5.0",
+    "@types/react": "^18.0.8",
+    "@types/react-dom": "^18.0.2",
+    "antd": "^4.21.5",
+    "lodash": "^4.17.21",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "react-router-dom": "6",
+    "underscore": "^1.13.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "react-scripts": "latest"
+  }
+}
