@@ -10,13 +10,16 @@ import {
   useRef,
   useState,
 } from 'react';
-import { PostModel } from '../../models/postModel';
 import PostItem from '../Posts/PostItem';
 import { isNil, throttle } from 'lodash';
-
-export class InfiniteScrollProps {
-  items: PostModel[];
-}
+import {
+  InfiniteScrollProps,
+  LayoutModel,
+  PositionModel,
+  ScrollAreaProps,
+  ScrollConfig,
+  ScrollItem,
+} from '../InfiniteScrollV2/InfiniteScrollV2Model';
 
 export default function InfiniteScrollV2({ items = [] }: InfiniteScrollProps) {
   if (items.length === 0) {
@@ -51,7 +54,7 @@ export default function InfiniteScrollV2({ items = [] }: InfiniteScrollProps) {
         getItems={({ nextPage, _currentPage }) => {
           return new Promise((resolve) => {
             setTimeout(() => {
-              resolve(getNextPage(nextPage));
+              resolve(getNextPage(nextPage) as ScrollItem[]);
             }, 400);
           });
         }}
@@ -61,22 +64,6 @@ export default function InfiniteScrollV2({ items = [] }: InfiniteScrollProps) {
   );
 }
 
-class ScrollConfig {
-  itemStartLen: number = 10;
-  itemPerLoad: number = 10;
-  itemOnPage: number = 20;
-  itemGap: number = 10;
-  endLine: string = 'You are up to date!!';
-  showSkeletion: boolean = true;
-}
-
-class ScrollAreaProps extends InfiniteScrollProps {
-  renderItems?: (item: any) => any;
-  initPage: number = 0;
-  getItems?: (params: any) => Promise<any[]>;
-  options?: ScrollConfig = new ScrollConfig();
-}
-
 function ScrollArea({
   initPage,
   getItems,
@@ -84,26 +71,30 @@ function ScrollArea({
   options = new ScrollConfig(),
 }: ScrollAreaProps) {
   if (renderItems === null) {
-    renderItems = (item: PostModel) => {
-      return <p>{item.id}</p>;
+    renderItems = (_item) => {
+      return <p>dummy item</p>;
     };
   }
 
-  const [items, setItems] = useState<PostModel[]>([]);
-  const layoutIndexRef = useRef(0);
+  const [items, setItems] = useState<ScrollItem[]>([]);
+  const layoutIndexRef = useRef<number>(0);
   const page = useRef<number>(initPage);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [triggerPos, setTriggerPos] = useState({ top: 0, left: 0 });
-  const [layout, setLayout] = useState<any[]>([]);
-  const isLoadingRef = useRef(false);
-  const appRef = useRef<HTMLDivElement>(null);
+  const [triggerPos, setTriggerPos] = useState<PositionModel>({
+    top: 0,
+    left: 0,
+  });
+  const [layout, setLayout] = useState<LayoutModel[]>([]);
+  const isLoadingRef = useRef<boolean>(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver>(null);
+  const [isLatestPage, setIsLatestPage] = useState<boolean>(false);
 
   const getScrollRange = useCallback(() => {
-    const minRange = appRef.current.scrollTop;
-    const maxRange = minRange + appRef.current.clientHeight;
-    const scrollGap = appRef.current.clientHeight;
+    const minRange = scrollAreaRef.current.scrollTop;
+    const maxRange = minRange + scrollAreaRef.current.clientHeight;
+    const scrollGap = scrollAreaRef.current.clientHeight;
     const minTop = minRange - scrollGap < 0 ? 0 : minRange - scrollGap;
     const maxTop = maxRange + scrollGap;
     return { minRange, maxRange, minTop, maxTop };
@@ -128,6 +119,7 @@ function ScrollArea({
         isLoadingRef.current = false;
         console.log('onTriggerLoadMore');
         if (nextItems.length === 0) {
+          setIsLatestPage(true);
           observerRef.current.disconnect();
         }
         setItems((prev) => [...prev, ...nextItems]);
@@ -137,7 +129,7 @@ function ScrollArea({
 
   const onTriggerScroll = useCallback(
     throttle(() => {
-      const appRefElem = appRef.current;
+      const appRefElem = scrollAreaRef.current;
       if (isNil(appRefElem.scrollTop)) return;
       const { minRange, maxRange, minTop, maxTop } = getScrollRange();
       const reload = layout.some(
@@ -153,7 +145,7 @@ function ScrollArea({
           });
         });
       }
-    }, 300),
+    }, options.scrollInterval),
     [layout]
   );
 
@@ -169,7 +161,7 @@ function ScrollArea({
   }, []);
 
   useLayoutEffect(() => {
-    const appRefElem = appRef.current;
+    const appRefElem = scrollAreaRef.current;
     appRefElem.addEventListener('scroll', onTriggerScroll);
 
     return () => {
@@ -197,10 +189,9 @@ function ScrollArea({
     const lastItem = items[items.length - 1];
     if (isNil(lastItem)) return;
     const position = layout[lastItem.uuid];
-    if (position) {
-      const triggerTop = position.top + position.clientHeight + options.itemGap;
-      setTriggerPos((prev) => ({ ...prev, top: triggerTop }));
-    }
+    if (isNil(position)) return;
+    const triggerTop = position.top + position.clientHeight + options.itemGap;
+    setTriggerPos((prev) => ({ ...prev, top: triggerTop }));
   }, [layout]);
 
   const handleOnLoad = useCallback((clientHeight, uuid) => {
@@ -236,11 +227,12 @@ function ScrollArea({
   return (
     <div>
       <h4>
-        Total item: {items.length} itemOnPage:{' '}
-        {layout.filter((item) => !item.hide).length} {isLoading && 'loading...'}{' '}
+        Total item: {items.length}{' '}
+        {`itemOnPage: ${layout.filter((item) => !item.hide).length}`}{' '}
+        {isLoading && 'loading...'}{' '}
       </h4>
       <div
-        ref={appRef}
+        ref={scrollAreaRef}
         style={{
           display: 'flex',
           gap: '16px',
@@ -262,8 +254,8 @@ function ScrollArea({
             left: `${triggerPos.left}px`,
           }}
         >
-          {<p>{options.endLine}</p>}
-          {options.showSkeletion && <Skeleton />}
+          {isLatestPage && <p>{options.endLine}</p>}
+          {!isLatestPage && options.showSkeletion && <Skeleton />}
         </div>
       </div>
     </div>
