@@ -20,6 +20,7 @@ import {
   ScrollConfig,
   ScrollItem,
 } from '../InfiniteScrollV2/InfiniteScrollV2Model';
+import { calcLayout } from '../InfiniteScrollV2/calculators';
 
 export default function InfiniteScrollV2({ items = [] }: InfiniteScrollProps) {
   if (items.length === 0) {
@@ -58,7 +59,7 @@ export default function InfiniteScrollV2({ items = [] }: InfiniteScrollProps) {
             }, 400);
           });
         }}
-        renderItems={(item) => <PostItem data={item} />}
+        renderItems={(item) => <PostItem showImage={true} data={item} />}
       />
     </Space>
   );
@@ -92,9 +93,11 @@ function ScrollArea({
   const [isLatestPage, setIsLatestPage] = useState<boolean>(false);
 
   const getScrollRange = useCallback(() => {
-    const minRange = scrollAreaRef.current.scrollTop;
-    const maxRange = minRange + scrollAreaRef.current.clientHeight;
-    const scrollGap = scrollAreaRef.current.clientHeight;
+    const scrollAreaElem = scrollAreaRef.current;
+
+    const minRange = scrollAreaElem.scrollTop;
+    const maxRange = minRange + scrollAreaElem.clientHeight;
+    const scrollGap = scrollAreaElem.clientHeight;
     const minTop = minRange - scrollGap < 0 ? 0 : minRange - scrollGap;
     const maxTop = maxRange + scrollGap;
     return { minRange, maxRange, minTop, maxTop };
@@ -283,17 +286,3 @@ const ItemWrapper = memo(
     );
   })
 );
-function calcLayout(layoutArr: any[], options: ScrollConfig): any[] {
-  return layoutArr.map((item, idx) => {
-    const layout = layoutArr[idx - 1];
-    if (isNil(item) || !isNil(item.top)) {
-      return item;
-    }
-    const prevTop = layout && layout.top ? layout.top : 0;
-    const prevClientHeight =
-      layout && layout.clientHeight ? layout.clientHeight : 0;
-    const top = prevTop + prevClientHeight;
-    item.top = top + options.itemGap;
-    return item;
-  });
-}
