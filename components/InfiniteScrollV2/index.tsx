@@ -88,9 +88,9 @@ function ScrollArea({
       return <p>{item.id}</p>;
     };
   }
-  const layoutIndexRef = useRef(0);
 
   const [items, setItems] = useState<PostModel[]>([]);
+  const layoutIndexRef = useRef(0);
   const page = useRef<number>(initPage);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [triggerPos, setTriggerPos] = useState({ top: 0, left: 0 });
@@ -111,7 +111,7 @@ function ScrollArea({
 
   const onTriggerLoadMore = useCallback((ev) => {
     if (!ev[0].isIntersecting) return;
-    if (isLoadingRef.current) return;
+    if (isLoadingRef.current || layoutIndexRef.current === 0) return;
 
     isLoadingRef.current = true;
     setIsLoading(true);
@@ -126,7 +126,7 @@ function ScrollArea({
       )
       .then((nextItems) => {
         isLoadingRef.current = false;
-        console.log('here in onTriggerLoadMore');
+        console.log('onTriggerLoadMore');
         if (nextItems.length === 0) {
           observerRef.current.disconnect();
         }
