@@ -96,9 +96,14 @@ function ScrollArea({
       return <p>{item.id}</p>;
     };
   }
-  const [items, setItems] = useState<PostModel[]>(
-    getItems({ nextPage: initPage })
-  );
+  const itemIdxRef = useRef(0);
+  const itemState = React.useMemo(() => {
+    return getItems({ nextPage: initPage }).map((item) => {
+      item.uuid = itemIdxRef.current++;
+      return item;
+    });
+  }, []);
+  const [items, setItems] = useState<PostModel[]>(itemState);
   const page = useRef<number>(initPage);
   const [loadMore, setLoadMore] = useState<LoadMoreClass>({
     isLoading: false,
@@ -131,7 +136,10 @@ function ScrollArea({
       console.log('here in onTriggerLoadMore');
       const currentPage = +page.current;
       const nextPage = ++page.current;
-      const nextItems = getItems({ nextPage, currentPage });
+      const nextItems = getItems({ nextPage, currentPage }).map((item) => {
+        item.uuid = itemIdxRef.current++;
+        return item;
+      });
       if (nextItems.length === 0) {
         observerRef.current.disconnect();
       }
@@ -188,7 +196,7 @@ function ScrollArea({
   }, []);
 
   useLayoutEffect(() => {
-    const lastItemId = items[items.length - 1].id;
+    const lastItemId = items[items.length - 1].uuid;
     const position = layout[lastItemId];
     if (position) {
       const triggerTop = position.top + position.clientHeight + options.itemGap;
@@ -196,10 +204,10 @@ function ScrollArea({
     }
   }, [layout]);
 
-  const handleOnLoad = useCallback((clientHeight, id) => {
+  const handleOnLoad = useCallback((clientHeight, uuid) => {
     setLayout((prevLayout) => {
       const { minTop, maxTop } = getScrollRange();
-      prevLayout[id] = { ...prevLayout[id], clientHeight };
+      prevLayout[uuid] = { ...prevLayout[uuid], clientHeight };
       return calcLayout(prevLayout, options).map((item) => {
         item.hide = item.top < minTop || item.top >= maxTop;
         return item;
@@ -209,8 +217,8 @@ function ScrollArea({
 
   const itemList = items
     .filter((item) => {
-      if (layout[item.id]) {
-        return !layout[item.id].hide;
+      if (layout[item.uuid]) {
+        return !layout[item.uuid].hide;
       }
       return true;
     })
@@ -219,7 +227,7 @@ function ScrollArea({
         <ItemWrapper
           key={idx}
           item={item}
-          top={layout[item.id] && layout[item.id].top}
+          top={layout[item.uuid] && layout[item.uuid].top}
           renderItems={renderItems}
           onLoad={handleOnLoad}
         />
@@ -271,7 +279,7 @@ const ItemWrapper = memo(
     useImperativeHandle(ref, () => wrapperRef.current);
 
     useLayoutEffect(() => {
-      onLoad(wrapperRef.current.clientHeight, item.id);
+      onLoad(wrapperRef.current.clientHeight, item.uuid);
     }, []);
 
     return (
