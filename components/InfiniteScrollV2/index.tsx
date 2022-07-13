@@ -1,11 +1,8 @@
 import { Skeleton, Space } from 'antd';
 import * as React from 'react';
 import {
-  forwardRef,
-  memo,
   useCallback,
   useEffect,
-  useImperativeHandle,
   useLayoutEffect,
   useRef,
   useState,
@@ -21,6 +18,7 @@ import {
   ScrollItem,
 } from '../InfiniteScrollV2/InfiniteScrollV2Model';
 import { calcLayout } from '../InfiniteScrollV2/calculators';
+import ItemWrapper from '../InfiniteScrollV2/ItemWrapper';
 
 export default function InfiniteScrollV2({ items = [] }: InfiniteScrollProps) {
   if (items.length === 0) {
@@ -220,7 +218,7 @@ function ScrollArea({
         <ItemWrapper
           key={idx}
           item={item}
-          top={layout[item.uuid] && layout[item.uuid].top}
+          position={{ top: layout[item.uuid] && layout[item.uuid].top }}
           renderItems={renderItems}
           onLoad={handleOnLoad}
         />
@@ -264,25 +262,3 @@ function ScrollArea({
     </div>
   );
 }
-const ItemWrapper = memo(
-  forwardRef(({ item, renderItems, onLoad, top = null }: any, ref) => {
-    const topOffset = top || 0;
-    const wrapperRef = useRef<HTMLDivElement>();
-    // console.log('render ItemWrapper');
-
-    useImperativeHandle(ref, () => wrapperRef.current);
-
-    useLayoutEffect(() => {
-      onLoad(wrapperRef.current.clientHeight, item.uuid);
-    }, []);
-
-    return (
-      <div
-        ref={wrapperRef}
-        style={{ position: 'absolute', top: `${topOffset}px`, left: '0px' }}
-      >
-        {renderItems(item)}
-      </div>
-    );
-  })
-);

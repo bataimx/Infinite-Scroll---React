@@ -12,8 +12,8 @@ export class ScrollConfig {
 }
 
 export class PositionModel {
-  top: number = 0;
-  left: number = 0;
+  top?: number = 0;
+  left?: number = 0;
 }
 
 export class ScrollItem extends PostModel {
@@ -32,4 +32,11 @@ export class LayoutModel {
   clientHeight: number;
   top: number;
   hide: boolean;
+}
+
+export class ItemWrapperModel {
+  item: ScrollItem | PostModel;
+  renderItems: (item: any) => any;
+  onLoad;
+  position: PositionModel;
 }
