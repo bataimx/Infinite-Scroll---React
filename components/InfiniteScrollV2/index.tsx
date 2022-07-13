@@ -132,10 +132,9 @@ function ScrollArea({
     throttle(() => {
       const appRefElem = scrollAreaRef.current;
       if (isNil(appRefElem.scrollTop)) return;
-      const { minRange, maxRange, minTop, maxTop } = getScrollRange();
+      const { minTop, maxTop } = getScrollRange();
       const reload = layout.some(
-        (item) =>
-          item && minRange < item.top && item.top <= maxRange && item.hide
+        (item) => item && minTop < item.top && item.top <= maxTop && item.hide
       );
       if (reload) {
         setLayout((prevLayout) => {
