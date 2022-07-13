@@ -111,6 +111,15 @@ function ScrollArea({
   const triggerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver>(null);
 
+  const getScrollRange = useCallback(() => {
+    const minRange = appRef.current.scrollTop;
+    const maxRange = minRange + appRef.current.clientHeight;
+    const scrollGap = appRef.current.clientHeight;
+    const minTop = minRange - scrollGap < 0 ? 0 : minRange - scrollGap;
+    const maxTop = maxRange + scrollGap;
+    return { minRange, maxRange, minTop, maxTop };
+  }, []);
+
   const onTriggerLoadMore = useCallback((ev) => {
     if (!ev[0].isIntersecting) return;
     if (isLoadingRef.current) return;
@@ -135,17 +144,13 @@ function ScrollArea({
     throttle(() => {
       const appRefElem = appRef.current;
       if (isNil(appRefElem.scrollTop)) return;
-      const minRange = appRefElem.scrollTop;
-      const maxRange = minRange + appRefElem.clientHeight;
-      const scrollGap = appRefElem.clientHeight;
+      const { minRange, maxRange, minTop, maxTop } = getScrollRange();
       const reload = layout.some(
         (item) =>
           item && minRange < item.top && item.top <= maxRange && item.hide
       );
       if (reload) {
         setLayout((prevLayout) => {
-          const minTop = minRange - scrollGap < 0 ? 0 : minRange - scrollGap;
-          const maxTop = maxRange + scrollGap;
           console.log('onTriggerScroll');
           return prevLayout.map((item) => {
             item.hide = item.top < minTop || item.top >= maxTop;
@@ -182,14 +187,6 @@ function ScrollArea({
     };
   }, []);
 
-  // useLayoutEffect(() => {
-  //   console.log('render');
-  //   //TODO: overlimit not work after scroll up and scroll down again
-  //   if (isOverLimit) {
-  //     observerRef.current.disconnect();
-  //   }
-  // }, [items, loadMore]);
-
   useLayoutEffect(() => {
     const lastItemId = items[items.length - 1].id;
     const position = layout[lastItemId];
@@ -201,12 +198,7 @@ function ScrollArea({
 
   const handleOnLoad = useCallback((clientHeight, id) => {
     setLayout((prevLayout) => {
-      const minRange = appRef.current.scrollTop;
-      const maxRange = minRange + appRef.current.clientHeight;
-      const scrollGap = appRef.current.clientHeight;
-      const minTop = minRange - scrollGap < 0 ? 0 : minRange - scrollGap;
-      const maxTop = maxRange + scrollGap;
-
+      const { minTop, maxTop } = getScrollRange();
       prevLayout[id] = { ...prevLayout[id], clientHeight };
       return calcLayout(prevLayout, options).map((item) => {
         item.hide = item.top < minTop || item.top >= maxTop;
