@@ -206,24 +206,21 @@ function ScrollArea({
     });
   }, []);
 
-  const itemList = items
-    .filter((item) => {
-      if (layout[item.uuid]) {
-        return !layout[item.uuid].hide;
-      }
-      return true;
-    })
-    .map((item, idx) => {
-      return (
+  const itemList = items.reduce((prev, item, idx) => {
+    if (!layout[item.uuid] || (layout[item.uuid] && !layout[item.uuid].hide)) {
+      return [
+        ...prev,
         <ItemWrapper
           key={idx}
           item={item}
           position={{ top: layout[item.uuid] && layout[item.uuid].top }}
           renderItems={renderItems}
           onLoad={handleOnLoad}
-        />
-      );
-    });
+        />,
+      ];
+    }
+    return prev;
+  }, []);
 
   return (
     <div>

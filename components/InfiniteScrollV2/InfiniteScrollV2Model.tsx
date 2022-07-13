@@ -37,6 +37,6 @@ export class LayoutModel {
 export class ItemWrapperModel {
   item: ScrollItem | PostModel;
   renderItems: (item: any) => any;
-  onLoad;
+  onLoad: (clientHeight: number, uuid: number) => void;
   position: PositionModel;
 }
