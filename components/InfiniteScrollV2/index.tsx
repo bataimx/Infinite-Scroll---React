@@ -49,7 +49,11 @@ export default function InfiniteScrollV2({ items = [] }: InfiniteScrollProps) {
         items={items}
         initPage={0}
         getItems={({ nextPage, _currentPage }) => {
-          return getNextPage(nextPage);
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve(getNextPage(nextPage));
+            }, 400);
+          });
         }}
         renderItems={(item) => <PostItem data={item} />}
       />
@@ -69,21 +73,9 @@ class ScrollConfig {
 class ScrollAreaProps extends InfiniteScrollProps {
   renderItems?: (item: any) => any;
   initPage: number = 0;
-  getItems?: (params: any) => any[];
+  getItems?: (params: any) => Promise<any[]>;
   options?: ScrollConfig = new ScrollConfig();
 }
-
-class LoadMoreClass {
-  isLoading: boolean;
-  limit: number;
-}
-
-const fetchItem = () =>
-  new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true);
-    }, 400);
-  });
 
 function ScrollArea({
   initPage,
@@ -96,19 +88,11 @@ function ScrollArea({
       return <p>{item.id}</p>;
     };
   }
-  const itemIdxRef = useRef(0);
-  const itemState = React.useMemo(() => {
-    return getItems({ nextPage: initPage }).map((item) => {
-      item.uuid = itemIdxRef.current++;
-      return item;
-    });
-  }, []);
-  const [items, setItems] = useState<PostModel[]>(itemState);
+  const layoutIndexRef = useRef(0);
+
+  const [items, setItems] = useState<PostModel[]>([]);
   const page = useRef<number>(initPage);
-  const [loadMore, setLoadMore] = useState<LoadMoreClass>({
-    isLoading: false,
-    limit: options.itemStartLen,
-  });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [triggerPos, setTriggerPos] = useState({ top: 0, left: 0 });
   const [layout, setLayout] = useState<any[]>([]);
   const isLoadingRef = useRef(false);
@@ -130,22 +114,25 @@ function ScrollArea({
     if (isLoadingRef.current) return;
 
     isLoadingRef.current = true;
-    setLoadMore((prev) => ({ ...prev, isLoading: true }));
-    fetchItem().then(() => {
-      isLoadingRef.current = false;
-      console.log('here in onTriggerLoadMore');
-      const currentPage = +page.current;
-      const nextPage = ++page.current;
-      const nextItems = getItems({ nextPage, currentPage }).map((item) => {
-        item.uuid = itemIdxRef.current++;
-        return item;
+    setIsLoading(true);
+    const currentPage = +page.current;
+    const nextPage = ++page.current;
+    getItems({ nextPage, currentPage })
+      .then((items) =>
+        items.map((item) => {
+          item.uuid = layoutIndexRef.current++;
+          return item;
+        })
+      )
+      .then((nextItems) => {
+        isLoadingRef.current = false;
+        console.log('here in onTriggerLoadMore');
+        if (nextItems.length === 0) {
+          observerRef.current.disconnect();
+        }
+        setItems((prev) => [...prev, ...nextItems]);
+        setIsLoading(false);
       });
-      if (nextItems.length === 0) {
-        observerRef.current.disconnect();
-      }
-      setItems((prev) => [...prev, ...nextItems]);
-      setLoadMore((prev) => ({ ...prev, isLoading: false }));
-    });
   }, []);
 
   const onTriggerScroll = useCallback(
@@ -169,6 +156,17 @@ function ScrollArea({
     }, 300),
     [layout]
   );
+
+  useEffect(() => {
+    getItems({ nextPage: initPage })
+      .then((resp) =>
+        resp.map((item) => {
+          item.uuid = layoutIndexRef.current++;
+          return item;
+        })
+      )
+      .then((nextItems) => setItems(nextItems));
+  }, []);
 
   useLayoutEffect(() => {
     const appRefElem = appRef.current;
@@ -196,8 +194,9 @@ function ScrollArea({
   }, []);
 
   useLayoutEffect(() => {
-    const lastItemId = items[items.length - 1].uuid;
-    const position = layout[lastItemId];
+    const lastItem = items[items.length - 1];
+    if (isNil(lastItem)) return;
+    const position = layout[lastItem.uuid];
     if (position) {
       const triggerTop = position.top + position.clientHeight + options.itemGap;
       setTriggerPos((prev) => ({ ...prev, top: triggerTop }));
@@ -233,12 +232,12 @@ function ScrollArea({
         />
       );
     });
+
   return (
     <div>
       <h4>
         Total item: {items.length} itemOnPage:{' '}
-        {layout.filter((item) => !item.hide).length}{' '}
-        {loadMore.isLoading && 'loading...'}{' '}
+        {layout.filter((item) => !item.hide).length} {isLoading && 'loading...'}{' '}
       </h4>
       <div
         ref={appRef}
