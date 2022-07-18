@@ -9,7 +9,7 @@ import React = require('react');
 import {
   ItemWrapperModel,
   ScrollItem,
-} from '../InfiniteScrollV2/InfiniteScrollV2Model';
+} from '../InfiniteScrollV2/InfiniteScrollV2.model';
 
 const ItemWrapper = forwardRef(
   ({ item, renderItems, onLoad, position = {} }: ItemWrapperModel, ref) => {

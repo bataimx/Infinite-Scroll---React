@@ -16,8 +16,8 @@ import {
   ScrollAreaProps,
   ScrollConfig,
   ScrollItem,
-} from '../InfiniteScrollV2/InfiniteScrollV2Model';
-import { calcLayout } from '../InfiniteScrollV2/calculators';
+} from '../InfiniteScrollV2/InfiniteScrollV2.model';
+import { calcLayout } from '../InfiniteScrollV2/calculators.utils';
 import ItemWrapper from '../InfiniteScrollV2/ItemWrapper';
 
 export default function InfiniteScrollV2({ items = [] }: InfiniteScrollProps) {

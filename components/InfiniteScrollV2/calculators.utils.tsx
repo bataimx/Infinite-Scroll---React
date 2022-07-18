@@ -1,4 +1,4 @@
-import { ScrollConfig } from '../InfiniteScrollV2/InfiniteScrollV2Model';
+import { ScrollConfig } from '../InfiniteScrollV2/InfiniteScrollV2.model';
 import { isNil } from 'lodash';
 
 export function calcLayout(layoutArr: any[], options: ScrollConfig): any[] {
