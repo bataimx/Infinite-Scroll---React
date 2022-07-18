@@ -210,7 +210,7 @@ function ScrollArea({
       return [
         ...prev,
         <ItemWrapper
-          key={idx}
+          key={item.uuid}
           item={item}
           position={{ top: layout[item.uuid] && layout[item.uuid].top }}
           renderItems={renderItems}
