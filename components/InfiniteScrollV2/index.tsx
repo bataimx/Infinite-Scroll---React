@@ -48,7 +48,6 @@ export default function InfiniteScrollV2({ items = [] }: InfiniteScrollProps) {
       style={{ display: 'flex' }}
     >
       <ScrollArea
-        items={items}
         initPage={0}
         getItems={({ nextPage, _currentPage }) => {
           return new Promise((resolve) => {

@@ -21,7 +21,6 @@ export class ScrollItem extends PostModel {
 }
 
 export class ScrollAreaProps {
-  items: (ScrollItem | PostModel)[];
   renderItems?: (item: any) => any;
   initPage: number = 0;
   getItems: (params: any) => Promise<ScrollItem[]>;
