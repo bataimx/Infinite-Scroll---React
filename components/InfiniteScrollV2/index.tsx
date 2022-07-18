@@ -95,7 +95,7 @@ function ScrollArea({
 
     const minRange = scrollAreaElem.scrollTop;
     const maxRange = minRange + scrollAreaElem.clientHeight;
-    const scrollGap = scrollAreaElem.clientHeight;
+    const scrollGap = scrollAreaElem.clientHeight * 2;
     const minTop = minRange - scrollGap < 0 ? 0 : minRange - scrollGap;
     const maxTop = maxRange + scrollGap;
     return { minRange, maxRange, minTop, maxTop };
