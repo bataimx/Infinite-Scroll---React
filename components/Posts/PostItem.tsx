@@ -1,5 +1,6 @@
 import { Card, Image, Skeleton } from 'antd';
 import * as React from 'react';
+import { memo } from 'react';
 import { PostModel } from '../../models/postModel';
 
 export class PostItemProps {
@@ -7,9 +8,10 @@ export class PostItemProps {
   showImage?: boolean;
 }
 
-export default function PostItem({ data, showImage = false }: PostItemProps) {
+function PostItem({ data, showImage = false }: PostItemProps) {
   const [loaded, setLoaded] = React.useState(false);
   const [url, setUrl] = React.useState(null);
+
   React.useEffect(() => {
     if (!showImage) return;
     fetch(`https://jsonplaceholder.typicode.com/photos/${data.id}`)
@@ -33,3 +35,5 @@ export default function PostItem({ data, showImage = false }: PostItemProps) {
     </Card>
   );
 }
+
+export default memo(PostItem);
