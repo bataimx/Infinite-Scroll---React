@@ -204,21 +204,26 @@ function ScrollArea({
     });
   }, []);
 
-  const itemList = items.reduce((prev, item, idx) => {
-    if (!layout[item.uuid] || (layout[item.uuid] && !layout[item.uuid].hide)) {
-      return [
-        ...prev,
-        <ItemWrapper
-          key={item.uuid}
-          item={item}
-          position={{ top: layout[item.uuid] && layout[item.uuid].top }}
-          renderItems={renderItems}
-          onLoad={handleOnLoad}
-        />,
-      ];
-    }
-    return prev;
-  }, []);
+  const itemList = React.useMemo(() => {
+    return items.reduce((prev, item) => {
+      if (
+        !layout[item.uuid] ||
+        (layout[item.uuid] && !layout[item.uuid].hide)
+      ) {
+        return [
+          ...prev,
+          <ItemWrapper
+            key={item.uuid}
+            item={item}
+            position={{ top: layout[item.uuid] && layout[item.uuid].top }}
+            renderItems={renderItems}
+            onLoad={handleOnLoad}
+          />,
+        ];
+      }
+      return prev;
+    }, []);
+  }, [layout, items]);
 
   return (
     <div>
